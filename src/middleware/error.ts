@@ -19,7 +19,6 @@ export const errorMiddleware = (
 ) => {
   console.error(err);
   return res.status(err.statusCode ?? 400).json({
-    statusCode: err.statusCode ?? 400,
     success: err.success ?? false,
     message: err.message ? err.issues ?? err.message : "Internal Server Error",
   });

@@ -1,10 +1,10 @@
 import express from "express";
-import { mysqlConnections } from "./db";
+import { mysqlConnections } from "./config/db";
 import cors from "cors";
 import morganBody from "morgan-body";
 import { errorMiddleware } from "./middleware/error";
 import { router } from "./route";
-import env from "./env";
+import env from "./config/env";
 
 const app = express();
 

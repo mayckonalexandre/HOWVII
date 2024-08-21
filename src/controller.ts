@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
-import { mysqlConnections } from "./db";
-import { Repository } from "./repository";
+import { paymentService } from "./payment.service";
 
 export async function getPaymentController(req: Request, res: Response) {
-  const query = await new Repository(mysqlConnections).getAllPayments();
-  return res.status(200).json(query);
+  const payments = await paymentService.getAllPayments();
+  return res.status(200).json(payments);
+}
+
+export async function sumOfPaymentsPerPropertyController(req: Request, res: Response) {
+  const sum = await paymentService.sumOfPaymentsPerProperty();
+  return res.status(200).json(sum);
 }

@@ -21,6 +21,7 @@ export class Mysql {
           waitForConnections: true,
           connectionLimit: 10,
           queueLimit: 0,
+          decimalNumbers: true,
         });
         console.log("Criado pool de conexões");
       } catch (error) {

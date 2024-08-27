@@ -1,7 +1,6 @@
 import { repository, Repository } from "./repository";
 
 type ResponseSumOfPaymentsPerProperty = {
-  cod_imovel: number;
   sumPayments: number;
   description: string;
 };
@@ -13,30 +12,74 @@ export class PaymentService {
     return await this.repository.getAllPayments();
   }
 
-  async sumOfPaymentsPerProperty() {
-    const payments = await this.repository.getAllPayments();
+  async getSalesByDate() {
+    const orders = await this.getAllPayments();
 
-    const sum: ResponseSumOfPaymentsPerProperty[] = payments.reduce(
-      (acc, current) => {
-        const existingProperty = acc.find(
-          (value) => value.cod_imovel === current.cod_imovel
-        );
+    //SELECT DATE_FORMAT(data_pagamento, '%m/%Y') AS period,SUM(valor_pagamento) AS total_sales,COUNT(id_venda) AS sales_quantity
+    //FROM pagamento GROUP BY period ORDER BY period DESC;
 
-        if (existingProperty)
-          existingProperty.sumPayments += current.valor_pagamento;
-        else
-          acc.push({
-            cod_imovel: current.cod_imovel,
-            description: current.descricao_imovel,
-            sumPayments: current.valor_pagamento,
-          });
+    const salesByPeriod = orders.reduce(
+      (acc, { data_pagamento, valor_pagamento }) => {
+        const date = `${data_pagamento.getFullYear()}${String(
+          data_pagamento.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+        acc[date]
+          ? (acc[date].totalSales += valor_pagamento)
+          : (acc[date] = { totalSales: valor_pagamento, salesQuantity: 0 });
+
+        acc[date].salesQuantity++;
 
         return acc;
       },
-      [] as ResponseSumOfPaymentsPerProperty[]
+      {} as { [key: string]: { salesQuantity: number; totalSales: number } }
     );
 
-    return sum;
+    const formatted = Object.keys(salesByPeriod).map((date) => {
+      const { totalSales, salesQuantity } = salesByPeriod[date];
+      return {
+        date,
+        totalSales,
+        salesQuantity,
+      };
+    });
+
+    return formatted;
+  }
+
+  async sumOfPaymentsPerProperty() {
+    const payments = await this.repository.getAllPayments();
+
+    //SELECT i.cod_imovel,i.descricao_imovel,SUM(p.valor_pagamento) AS total_pagamentos FROM pagamento p
+    //INNER JOIN imovel i ON p.cod_imovel = i.cod_imovel INNER JOIN tipo t ON i.cod_tipo = t.cod_tipo GROUP BY i.cod_imovel, i.descricao_imovel
+    //ORDER BY cod_imovel DESC;
+
+    const sum: { [keys: number]: ResponseSumOfPaymentsPerProperty } =
+      payments.reduce(
+        (acc, { cod_imovel, descricao_imovel, valor_pagamento }) => {
+          acc[cod_imovel]
+            ? (acc[cod_imovel].sumPayments += valor_pagamento)
+            : (acc[cod_imovel] = {
+                description: descricao_imovel,
+                sumPayments: valor_pagamento,
+              });
+
+          return acc;
+        },
+        {} as { [keys: number]: ResponseSumOfPaymentsPerProperty }
+      );
+
+    const formattedPayments = Object.keys(sum).map((value) => {
+      const cod = Number(value);
+      const obj = sum[cod];
+      return {
+        cod_imovel: cod,
+        description: obj.description,
+        sumPayments: obj.sumPayments,
+      };
+    });
+
+    return formattedPayments;
   }
 }
 

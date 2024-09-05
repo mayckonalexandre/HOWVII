@@ -99,8 +99,6 @@ export class PaymentService {
       [key]: `${calculatePercentage(metrics[key])}%`,
     }));
 
-    console.log(percentage);
-
     return percentage;
   }
 }

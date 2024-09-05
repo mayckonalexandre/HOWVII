@@ -81,6 +81,28 @@ export class PaymentService {
 
     return formattedPayments;
   }
+
+  async percentageByTypeOfProperty() {
+    const data = await this.getAllPayments();
+
+    if (!data) return null;
+
+    const calculatePercentage = (value: number) => (value * 100) / data.length;
+
+    const metrics = data.reduce((acc, { tipo_imovel }) => {
+      acc[tipo_imovel] = (acc[tipo_imovel] || 0) + 1;
+
+      return acc;
+    }, {} as { [key: string]: number });
+
+    const percentage = Object.keys(metrics).map((key) => ({
+      [key]: `${calculatePercentage(metrics[key])}%`,
+    }));
+
+    console.log(percentage);
+
+    return percentage;
+  }
 }
 
 export const paymentService = new PaymentService(repository);
